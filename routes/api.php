@@ -2,13 +2,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 
-
+/*
 Route::get('/login', function () {
     return response()->json([
         'code' => 401,
         'message' => 'Invalido. Por favor inicia sesión primero'
     ], 401);
-})->name('login');
+})->name('login');*/
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
