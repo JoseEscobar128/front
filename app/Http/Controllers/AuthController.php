@@ -12,10 +12,15 @@ class AuthController extends Controller
     /**
      * Redirige al usuario a la API para que inicie el proceso de autorización.
      */
-   public function redirectToProvider(Request $request)
+    public function redirectToProvider(Request $request)
     {
-        /*
         $request->session()->put('state', $state = Str::random(40));
+
+        Log::info('[OAuth Redirect] State generado y guardado en sesión', [
+            'generated_state' => $state,
+            'session_id' => session()->getId(),
+            'cookies' => $request->cookies->all()
+        ]);
 
 
         $query = http_build_query([
@@ -26,29 +31,7 @@ class AuthController extends Controller
         ]);
 
         return redirect(config('services.auth_api.base_url') . '/oauth/authorize?' . $query);
-        */
-        // Para depuración, usamos un valor fijo o incremental
-    $state = 'debug-state-123';
-    $request->session()->put('state', $state);
-
-    Log::info('[OAuth Redirect] State generado y guardado en sesión', [
-        'generated_state' => $state,
-        'session_id' => session()->getId(),
-        'cookies' => $request->cookies->all()
-    ]);
-
-    $query = http_build_query([
-        'client_id'     => config('services.oauth.client_id'),
-        'redirect_uri'  => config('services.oauth.redirect_uri'),
-        'response_type' => 'code',
-        'state'         => $state,
-    ]);
-
-    return redirect(config('services.auth_api.base_url') . '/oauth/authorize?' . $query);
-}
-    
-        
-
+    }
 
     /**
      * Recibe al usuario de vuelta desde la API y canjea el código por un token.
@@ -57,6 +40,7 @@ class AuthController extends Controller
     {
         // LOG: Inicio del proceso de callback
         Log::info('[OAuth Callback] Se ha recibido la redirección desde la API.', ['query' => $request->all()]);
+
 
         $state = $request->session()->pull('state');
         if (! (strlen($state) > 0 && $state === $request->state)) {
@@ -72,7 +56,7 @@ class AuthController extends Controller
         Log::info('[OAuth Callback] El estado (state) es válido. Procediendo a solicitar el token de acceso.');
 
         $tokenEndpoint = config('services.auth_api.base_url') . '/oauth2/token';
-        
+
         $payload = [
             'grant_type'    => 'authorization_code',
             'client_id'     => config('services.oauth.client_id'),
@@ -87,8 +71,8 @@ class AuthController extends Controller
         ]);
 
         $tokenResponse = Http::withoutVerifying()
-                             ->asForm()
-                             ->post($tokenEndpoint, $payload);
+            ->asForm()
+            ->post($tokenEndpoint, $payload);
 
         if ($tokenResponse->failed()) {
             // LOG: La petición del token falló
@@ -98,7 +82,7 @@ class AuthController extends Controller
             ]);
             return redirect('/')->with('error', 'No se pudo obtener el token de acceso desde la API.');
         }
-        
+
         // LOG: La petición del token fue exitosa
         Log::info('[OAuth Callback] Token de acceso obtenido correctamente.');
 
@@ -106,13 +90,13 @@ class AuthController extends Controller
         $accessToken = $tokenData['access_token'];
 
         $profileEndpoint = config('services.auth_api.base_url') . '/usuarios/me';
-        
+
         // LOG: Solicitando perfil del usuario
         Log::info('[OAuth Callback] Solicitando perfil del usuario desde: ' . $profileEndpoint);
 
         $userResponse = Http::withToken($accessToken)
-                            ->acceptJson()
-                            ->get($profileEndpoint);
+            ->acceptJson()
+            ->get($profileEndpoint);
 
         if ($userResponse->failed()) {
             // LOG: La petición del perfil falló
@@ -146,7 +130,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $token = $request->session()->get('access_token');
-        
+
         $logoutEndpoint = config('services.auth_api.base_url') . '/usuarios/logout';
         Http::withToken($token)->post($logoutEndpoint);
 
