@@ -47,7 +47,7 @@ class AuthController extends Controller
     return redirect(config('services.auth_api.base_url') . '/oauth/authorize?' . $query);
 }
     
-        }
+        
 
 
     /**
