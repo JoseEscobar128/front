@@ -27,5 +27,11 @@ class AppServiceProvider extends ServiceProvider
         // Esto le dice a Laravel exactamente dónde encontrar la lógica para cada vista.
         Livewire::component('auth.login', Login::class);
         Livewire::component('auth.verify-otp', VerifyOtp::class);
+
+
+         // --- FORZAR HTTPS EN PRODUCCIÓN ---
+    if (app()->environment('production')) {
+        \Illuminate\Support\Facades\URL::forceScheme('https');
     }
+}
 }
