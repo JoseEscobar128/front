@@ -14,7 +14,9 @@ class AuthController extends Controller
      */
    public function redirectToProvider(Request $request)
     {
+        /*
         $request->session()->put('state', $state = Str::random(40));
+
 
         $query = http_build_query([
             'client_id'     => config('services.oauth.client_id'),
@@ -24,7 +26,29 @@ class AuthController extends Controller
         ]);
 
         return redirect(config('services.auth_api.base_url') . '/oauth/authorize?' . $query);
-    }
+        */
+        // Para depuración, usamos un valor fijo o incremental
+    $state = 'debug-state-123';
+    $request->session()->put('state', $state);
+
+    Log::info('[OAuth Redirect] State generado y guardado en sesión', [
+        'generated_state' => $state,
+        'session_id' => session()->getId(),
+        'cookies' => $request->cookies->all()
+    ]);
+
+    $query = http_build_query([
+        'client_id'     => config('services.oauth.client_id'),
+        'redirect_uri'  => config('services.oauth.redirect_uri'),
+        'response_type' => 'code',
+        'state'         => $state,
+    ]);
+
+    return redirect(config('services.auth_api.base_url') . '/oauth/authorize?' . $query);
+}
+    
+        }
+
 
     /**
      * Recibe al usuario de vuelta desde la API y canjea el código por un token.
